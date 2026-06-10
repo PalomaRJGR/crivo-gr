@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crivo GR — Transpanorama</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+:root{
+  --red:#7B1C1C;--red-mid:#9B2A2A;--red-light:#FCEBEB;--red-border:#F5BABA;
+  --gold:#B8860B;--gold-light:#FFF8E1;--gold-border:#F0D080;
+  --green:#2D6A2D;--green-light:#EAF5EA;--green-border:#A8D5A8;
+  --blue:#1A4F8A;--blue-light:#E8F1FB;--blue-border:#A0C0E8;
+  --warn:#854F0B;--warn-light:#FAEEDA;--warn-border:#F0C080;
+  --bg:#F6F4F1;--surface:#FFFFFF;--surface2:#FAFAF8;
+  --border:#E5E0D8;--border2:#D8D0C8;
+  --text:#1C1A18;--text2:#5A5550;--text3:#9A9590;
+  --radius:10px;--radius-sm:6px;--radius-lg:16px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.06);
+  --shadow-lg:0 4px 24px rgba(0,0,0,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+.topbar{background:var(--red);padding:0 24px;height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.topbar-logo{color:#fff;font-weight:700;font-size:15px;letter-spacing:.3px;display:flex;align-items:center;gap:8px}
+.topbar-logo i{font-size:18px}
+.topbar-sep{width:1px;height:20px;background:rgba(255,255,255,.2);margin:0 4px}
+.topbar-mode{display:flex;gap:2px;margin-left:auto;background:rgba(0,0,0,.2);border-radius:var(--radius-sm);padding:3px}
+.mode-btn{padding:5px 14px;border-radius:4px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:transparent;color:rgba(255,255,255,.7);font-family:'DM Sans',sans-serif;transition:all .2s}
+.mode-btn.active{background:#fff;color:var(--red)}
+
+.sync-bar{background:#1a3a1a;color:#a8d5a8;padding:6px 24px;font-size:11px;display:flex;align-items:center;gap:8px}
+.sync-bar.error{background:#3a1a1a;color:#f5baba}
+.sync-bar.syncing{background:#1a2a3a;color:#a0c0e8}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.sync-dot.pulse{animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.view{display:none;min-height:calc(100vh - 80px)}
+.view.active{display:block}
+
+.analista-wrap{max-width:820px;margin:0 auto;padding:28px 20px}
+.page-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px}
+.page-sub{font-size:14px;color:var(--text2);margin-bottom:24px}
+
+.select-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px;box-shadow:var(--shadow)}
+.select-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sel-group{display:flex;flex-direction:column;gap:6px}
+.sel-group label{font-size:12px;font-weight:500;color:var(--text2)}
+select,.txt-input{width:100%;border:1px solid var(--border2);border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--surface);outline:none;transition:border-color .2s}
+select:focus,.txt-input:focus{border-color:var(--red)}
+.start-btn{width:100%;margin-top:14px;padding:11px;background:var(--red);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .2s}
+.start-btn:hover{background:var(--red-mid)}
+.start-btn:disabled{background:var(--border2);cursor:not-allowed}
+
+.checklist-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
+.cl-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.cl-title{font-size:15px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
+.cl-badge{background:var(--red-light);color:var(--red);font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px}
+.cl-meta{font-size:12px;color:var(--text3)}
+
+.prog-wrap{padding:12px 20px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.prog-bar-bg{flex:1;height:6px;background:var(--border);border-radius:999px;overflow:hidden}
+.prog-bar-fill{height:6px;border-radius:999px;background:var(--green);transition:width .4s}
+.prog-text{font-size:12px;font-weight:500;color:var(--text2);min-width:50px;text-align:right}
+
+.cl-body{padding:8px 0}
+.chk-item{display:flex;align-items:flex-start;gap:12px;padding:11px 20px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;user-select:none}
+.chk-item:last-child{border-bottom:none}
+.chk-item:hover{background:var(--surface2)}
+.chk-item.checked{background:#F8FDF8}
+.chk-item.checked .chk-label{color:var(--text3);text-decoration:line-through}
+
+.chk-box{width:20px;height:20px;border:2px solid var(--border2);border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .2s;background:#fff}
+.chk-item.checked .chk-box{background:var(--green);border-color:var(--green)}
+.chk-item.checked .chk-box i{color:#fff;font-size:13px}
+.chk-box i{display:none}
+.chk-item.checked .chk-box i{display:block}
+
+.chk-content{flex:1}
+.chk-label{font-size:13px;font-weight:500;color:var(--text);line-height:1.4;transition:color .2s}
+.chk-desc{font-size:12px;color:var(--text2);margin-top:2px;line-height:1.5}
+.chk-tags{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}
+.tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px}
+.tag-obr{background:var(--red-light);color:var(--red)}
+.tag-isen{background:var(--blue-light);color:var(--blue)}
+.tag-cond{background:var(--warn-light);color:var(--warn)}
+
+.obs-wrap{padding:6px 20px 10px 52px}
+.obs-input{width:100%;border:1px solid var(--border2);border-radius:var(--radius-sm);padding:7px 10px;font-size:12px;font-family:'DM Mono',monospace;color:var(--text);background:var(--surface);outline:none;resize:none;transition:border-color .2s}
+.obs-input:focus{border-color:var(--red)}
+
+.cl-footer{padding:16px 20px;border-top:1px solid var(--border);background:var(--surface2);display:flex;gap:10px;flex-wrap:wrap}
+.gen-btn{flex:1;padding:10px 16px;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .2s}
+.gen-btn-primary{background:var(--red);color:#fff}
+.gen-btn-primary:hover{background:var(--red-mid)}
+.gen-btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border2)}
+.gen-btn-secondary:hover{background:var(--bg)}
+
+.nota-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
+.nota-header{padding:14px 20px;background:var(--text);display:flex;align-items:center;justify-content:space-between}
+.nota-header span{color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+.nota-body{padding:16px 20px}
+.nota-text{font-family:'DM Mono',monospace;font-size:12px;line-height:1.9;color:var(--text);white-space:pre-wrap;word-break:break-word}
+.nota-actions{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px}
+.copy-btn{padding:8px 16px;background:var(--text);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px}
+.copy-btn:hover{opacity:.85}
+.reset-btn{padding:8px 16px;background:var(--surface);border:1px solid var(--border2);color:var(--text2);border-radius:var(--radius-sm);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif}
+
+.admin-wrap{display:grid;grid-template-columns:270px 1fr;min-height:calc(100vh - 80px)}
+.admin-sidebar{background:var(--surface);border-right:1px solid var(--border);padding:20px;overflow-y:auto}
+.admin-main{padding:24px;overflow-y:auto}
+.admin-sidebar-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+
+.pgr-list{display:flex;flex-direction:column;gap:4px;margin-bottom:16px}
+.pgr-item{padding:9px 12px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);display:flex;align-items:center;justify-content:space-between;transition:all .15s;border:1px solid transparent}
+.pgr-item:hover{background:var(--bg);color:var(--text)}
+.pgr-item.active{background:var(--red-light);color:var(--red);border-color:var(--red-border)}
+.pgr-item-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pgr-count{font-size:10px;font-weight:600;color:var(--text3);background:var(--bg);padding:2px 7px;border-radius:999px}
+
+.add-pgr-btn{width:100%;padding:9px;background:var(--red);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:7px}
+
+.editor-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden}
+.editor-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.editor-title-input{flex:1;min-width:200px;font-size:17px;font-weight:700;border:none;outline:none;color:var(--text);background:transparent;font-family:'DM Sans',sans-serif}
+.editor-group-sel{border:1px solid var(--border2);border-radius:var(--radius-sm);padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--surface);outline:none}
+.save-pgr-btn{padding:8px 18px;background:var(--red);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px}
+.save-pgr-btn:disabled{background:var(--border2);cursor:not-allowed}
+.delete-pgr-btn{padding:8px 12px;background:var(--surface);border:1px solid var(--red-border);color:var(--red);border-radius:var(--radius-sm);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif}
+
+.item-editor{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px}
+.item-editor:last-of-type{border-bottom:none}
+.drag-handle{color:var(--text3);cursor:grab;margin-top:8px;font-size:16px}
+.item-fields{flex:1;display:flex;flex-direction:column;gap:7px}
+.item-row{display:flex;gap:8px;align-items:center}
+.item-name-input{flex:1;border:1px solid var(--border2);border-radius:var(--radius-sm);padding:7px 10px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--surface);outline:none}
+.item-name-input:focus{border-color:var(--red)}
+.item-desc-input{width:100%;border:1px solid var(--border2);border-radius:var(--radius-sm);padding:6px 10px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text2);background:var(--surface);outline:none}
+.item-desc-input:focus{border-color:var(--red)}
+.item-type-sel{border:1px solid var(--border2);border-radius:var(--radius-sm);padding:7px 10px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--surface);outline:none}
+.del-item-btn{width:30px;height:30px;border:1px solid var(--red-border);background:var(--red-light);color:var(--red);border-radius:var(--radius-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+.add-item-btn{margin:12px 20px;padding:9px;border:1.5px dashed var(--border2);background:transparent;border-radius:var(--radius-sm);font-size:13px;color:var(--text3);cursor:pointer;font-family:'DM Sans',sans-serif;width:calc(100% - 40px);display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s}
+.add-item-btn:hover{border-color:var(--red);color:var(--red);background:var(--red-light)}
+
+.editor-empty{padding:48px;text-align:center;color:var(--text3)}
+.editor-empty i{font-size:36px;margin-bottom:12px;display:block}
+.editor-empty p{font-size:13px;line-height:1.7}
+
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.8);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.loading-overlay.hide{display:none}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:14px;color:var(--text2);font-weight:500}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:12px 18px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);z-index:999;display:flex;align-items:center;gap:8px;transform:translateY(80px);opacity:0;transition:all .3s}
+.toast.show{transform:translateY(0);opacity:1}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:480px;max-width:95vw;box-shadow:var(--shadow-lg)}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.modal-footer{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
+.modal-btn{padding:9px 18px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;border:none}
+.modal-btn-primary{background:var(--red);color:#fff}
+.modal-btn-secondary{background:var(--bg);color:var(--text2);border:1px solid var(--border2)}
+.form-row{margin-bottom:12px}
+.form-row label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;display:block}
+
+@media(max-width:640px){
+  .select-grid{grid-template-columns:1fr}
+  .admin-wrap{grid-template-columns:1fr}
+  .admin-sidebar{border-right:none;border-bottom:1px solid var(--border)}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">Conectando ao banco de dados...</div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <i class="ti ti-shield-check"></i> Crivo GR — Transpanorama
+  </div>
+  <div class="topbar-sep"></div>
+  <span id="topbar-sub" style="color:rgba(255,255,255,.6);font-size:12px">Central de Análise</span>
+  <div class="topbar-mode">
+    <button class="mode-btn active" onclick="setMode('analista',this)"><i class="ti ti-clipboard-check"></i> Analista</button>
+    <button class="mode-btn" onclick="setMode('admin',this)"><i class="ti ti-settings"></i> Admin</button>
+  </div>
+</div>
+
+<!-- SYNC BAR -->
+<div class="sync-bar" id="sync-bar">
+  <div class="sync-dot pulse" id="sync-dot"></div>
+  <span id="sync-msg">Conectando...</span>
+</div>
+
+<!-- VIEW ANALISTA -->
+<div class="view active" id="view-analista">
+  <div class="analista-wrap">
+    <div class="page-title">Nova análise</div>
+    <div class="page-sub">Selecione a operação para carregar o crivo de verificação</div>
+
+    <div class="select-section">
+      <div class="select-grid">
+        <div class="sel-group">
+          <label>Tipo de operação / grupo</label>
+          <select id="sel-grupo" onchange="filtrarPGRs()">
+            <option value="">— Todos os grupos —</option>
+          </select>
+        </div>
+        <div class="sel-group">
+          <label>PGR / Checklist</label>
+          <select id="sel-pgr">
+            <option value="">— Selecione o checklist —</option>
+          </select>
+        </div>
+        <div class="sel-group">
+          <label>Nome do motorista</label>
+          <input type="text" class="txt-input" id="inp-motorista" placeholder="Ex: João C. Silva">
+        </div>
+        <div class="sel-group">
+          <label>Placa / composição</label>
+          <input type="text" class="txt-input" id="inp-placa" placeholder="Ex: ABC1D23">
+        </div>
+      </div>
+      <button class="start-btn" id="start-btn" onclick="iniciarAnalise()">
+        <i class="ti ti-arrow-right"></i> Iniciar análise
+      </button>
+    </div>
+
+    <div id="checklist-area"></div>
+  </div>
+</div>
+
+<!-- VIEW ADMIN -->
+<div class="view" id="view-admin">
+  <div class="admin-wrap">
+    <div class="admin-sidebar">
+      <div class="admin-sidebar-title">Checklists cadastrados</div>
+      <div class="pgr-list" id="pgr-list-sidebar"></div>
+      <button class="add-pgr-btn" onclick="abrirModalNovaPGR()">
+        <i class="ti ti-plus"></i> Novo checklist
+      </button>
+    </div>
+    <div class="admin-main">
+      <div id="editor-area">
+        <div class="editor-empty">
+          <i class="ti ti-clipboard-list"></i>
+          <p>Selecione um checklist na barra lateral para editar<br>ou clique em <strong>Novo checklist</strong> para criar.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><i class="ti ti-check"></i> <span id="toast-msg">Salvo!</span></div>
+
+<!-- MODAL NOVA PGR -->
+<div class="modal-overlay" id="modal-nova">
+  <div class="modal">
+    <h3><i class="ti ti-plus" style="color:var(--red)"></i> Novo checklist</h3>
+    <div class="form-row">
+      <label>Nome do checklist</label>
+      <input type="text" class="txt-input" id="modal-nome" placeholder="Ex: Soja em grão — Padrão">
+    </div>
+    <div class="form-row">
+      <label>Grupo / tipo de operação</label>
+      <input type="text" class="txt-input" id="modal-grupo" placeholder="Ex: Grãos, Fertilizantes, JBS...">
+    </div>
+    <div class="form-row">
+      <label>Observação / alerta para analistas (opcional)</label>
+      <input type="text" class="txt-input" id="modal-obs" placeholder="Ex: GR externa obrigatória">
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn modal-btn-secondary" onclick="fecharModal()">Cancelar</button>
+      <button class="modal-btn modal-btn-primary" onclick="criarPGR()">Criar checklist</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════ SUPABASE CONFIG ═══════════
+const SUPA_URL = 'https://rycdkedwlaclmxstbzlx.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5Y2RrZWR3bGFjbG14c3Riemx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5OTE1NzQsImV4cCI6MjA5NjU2NzU3NH0.-IFuRI6lAk9dQTPpfWIKI06zmCP44b7vH7zD5VLAHhg';
+const HEADERS = {'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY};
+
+async function dbGet(){
+  const r = await fetch(`${SUPA_URL}/rest/v1/checklists?select=*&order=grupo,nome`, {headers:HEADERS});
+  if(!r.ok) throw new Error('Erro ao buscar dados');
+  return r.json();
+}
+async function dbInsert(row){
+  const r = await fetch(`${SUPA_URL}/rest/v1/checklists`, {method:'POST', headers:{...HEADERS,'Prefer':'return=representation'}, body:JSON.stringify(row)});
+  if(!r.ok) throw new Error('Erro ao inserir');
+  return r.json();
+}
+async function dbUpdate(id, row){
+  const r = await fetch(`${SUPA_URL}/rest/v1/checklists?id=eq.${id}`, {method:'PATCH', headers:{...HEADERS,'Prefer':'return=representation'}, body:JSON.stringify(row)});
+  if(!r.ok) throw new Error('Erro ao atualizar');
+  return r.json();
+}
+async function dbDelete(id){
+  const r = await fetch(`${SUPA_URL}/rest/v1/checklists?id=eq.${id}`, {method:'DELETE', headers:HEADERS});
+  if(!r.ok) throw new Error('Erro ao deletar');
+}
+
+// ═══════════ STATE ═══════════
+let DB = [];
+let currentPGRId = null;
+let analiseAtiva = null;
+
+function uid(){ return 'pgr-'+Date.now()+Math.random().toString(36).slice(2,6); }
+function iuid(){ return 'i'+Date.now()+Math.random().toString(36).slice(2,6); }
+
+function setSyncBar(status, msg){
+  const bar = document.getElementById('sync-bar');
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-msg');
+  bar.className = 'sync-bar' + (status==='error'?' error':status==='syncing'?' syncing':'');
+  dot.className = 'sync-dot' + (status==='syncing'?' pulse':'');
+  txt.textContent = msg;
+}
+
+function toast(msg, icon='ti-check'){
+  const t=document.getElementById('toast');
+  t.querySelector('i').className='ti '+icon;
+  document.getElementById('toast-msg').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// ═══════════ INIT ═══════════
+async function init(){
+  setSyncBar('syncing','Conectando ao banco de dados...');
+  try{
+    DB = await dbGet();
+    if(DB.length === 0) await seedDefaultData();
+    DB = await dbGet();
+    setSyncBar('ok', `✓ Sincronizado — ${DB.length} checklist(s) carregado(s)`);
+    document.getElementById('loading').classList.add('hide');
+    populateSelects();
+    renderAdminSidebar();
+  } catch(e){
+    setSyncBar('error','⚠ Erro de conexão — verifique sua internet');
+    document.getElementById('loading').classList.add('hide');
+    toast('Erro ao conectar ao banco de dados','ti-alert-circle');
+  }
+}
+
+async function seedDefaultData(){
+  const defaults = [
+    {id:'pgr-soja',nome:'Soja em grão',grupo:'Grãos',obs:'Aplicável para todos os embarcadores de grãos. Limite padrão R$ 250k.',itens:[
+      {id:'i1',nome:'Contato com motorista realizado',desc:'Ligar e confirmar dados operacionais',tipo:'obrigatorio'},
+      {id:'i2',nome:'Biometria facial confirmada',desc:'Validação pelo sistema — conferir foto x CNH x composição',tipo:'obrigatorio'},
+      {id:'i3',nome:'CNH válida e categoria compatível',desc:'Verificar categoria, validade e dados via SENATRAN/DETRAN',tipo:'obrigatorio'},
+      {id:'i4',nome:'CRLV de todos os veículos conferidos',desc:'Verificar autenticidade e restrições via DENATRAN',tipo:'obrigatorio'},
+      {id:'i5',nome:'ANTT / RNTRC regular',desc:'Alerta automático se cadastro inferior a 12 meses',tipo:'obrigatorio'},
+      {id:'i6',nome:'Referência comercial confirmada',desc:'Mínimo 2 empresas, últimos 90 dias',tipo:'obrigatorio'},
+      {id:'i7',nome:'Consulta de histórico criminal realizada',desc:'Pesquisa nacional — obrigatória no 1° embarque ou após 365 dias',tipo:'obrigatorio'},
+      {id:'i8',nome:'Sem bloqueio no Klios / Eagle / Blacklist',desc:'Verificar bases de restrições internas e de mercado',tipo:'obrigatorio'},
+      {id:'i9',nome:'Rastreador ativo confirmado',desc:'Verificar sinal e espelhamento para gerenciadora',tipo:'obrigatorio'},
+      {id:'i10',nome:'Contrato de arrendamento',desc:'Exigido quando proprietário tração ≠ proprietário reboque',tipo:'condicional'},
+    ]},
+    {id:'pgr-milho',nome:'Milho em grão',grupo:'Grãos',obs:'Procedimento padrão para milho. Verificar experiência prévia no produto.',itens:[
+      {id:'i1',nome:'Contato com motorista realizado',desc:'Ligar e confirmar dados operacionais',tipo:'obrigatorio'},
+      {id:'i2',nome:'Biometria facial confirmada',desc:'Validação pelo sistema',tipo:'obrigatorio'},
+      {id:'i3',nome:'CNH válida e categoria compatível',desc:'Verificar via SENATRAN/DETRAN',tipo:'obrigatorio'},
+      {id:'i4',nome:'CRLV de todos os veículos conferidos',desc:'Verificar autenticidade',tipo:'obrigatorio'},
+      {id:'i5',nome:'ANTT / RNTRC regular',desc:'Alerta se cadastro < 12 meses',tipo:'obrigatorio'},
+      {id:'i6',nome:'Referência comercial confirmada',desc:'Mínimo 2 empresas, últimos 90 dias',tipo:'obrigatorio'},
+      {id:'i7',nome:'Consulta criminal realizada',desc:'Nacional — 1° embarque ou após 365 dias',tipo:'obrigatorio'},
+      {id:'i8',nome:'Sem bloqueio Klios / Eagle / Blacklist',desc:'Verificar restrições',tipo:'obrigatorio'},
+      {id:'i9',nome:'Rastreador ativo confirmado',desc:'Sinal e espelhamento',tipo:'obrigatorio'},
+      {id:'i10',nome:'Contrato de arrendamento',desc:'Se proprietário tração ≠ reboque',tipo:'condicional'},
+    ]},
+    {id:'pgr-fert',nome:'Fertilizantes — EUROCHEM / MOSAIC',grupo:'Fertilizantes',obs:'GR externa obrigatória (GUEP ou Certify). Origem Uberaba: rastreador obrigatório independente do valor.',itens:[
+      {id:'i1',nome:'Contato com motorista realizado',desc:'Ligar e confirmar dados operacionais',tipo:'obrigatorio'},
+      {id:'i2',nome:'Biometria facial confirmada',desc:'Validação pelo sistema',tipo:'obrigatorio'},
+      {id:'i3',nome:'CNH válida e categoria compatível',desc:'Verificar via SENATRAN/DETRAN',tipo:'obrigatorio'},
+      {id:'i4',nome:'CRLV de todos os veículos conferidos',desc:'Verificar autenticidade',tipo:'obrigatorio'},
+      {id:'i5',nome:'ANTT / RNTRC regular',desc:'Alerta se cadastro < 12 meses',tipo:'obrigatorio'},
+      {id:'i6',nome:'Referência comercial confirmada',desc:'Mínimo 2 empresas, últimos 90 dias',tipo:'obrigatorio'},
+      {id:'i7',nome:'GR externa solicitada (GUEP ou Certify)',desc:'Nós solicitamos — sacaria/bags: isentos',tipo:'obrigatorio'},
+      {id:'i8',nome:'Rastreador ativo confirmado',desc:'Uberaba: obrigatório independente do valor',tipo:'obrigatorio'},
+      {id:'i9',nome:'Consulta criminal realizada',desc:'Nacional — 1° embarque ou após 365 dias',tipo:'obrigatorio'},
+      {id:'i10',nome:'Contrato de arrendamento',desc:'Se proprietário tração ≠ reboque',tipo:'condicional'},
+    ]},
+    {id:'pgr-jbs',nome:'JBS',grupo:'Clientes Especiais',obs:'GR externa Opentech — embarcador envia antes do carregamento. Vitimologia obrigatória no 1° embarque.',itens:[
+      {id:'i1',nome:'Contato com motorista realizado',desc:'Ligar e confirmar dados operacionais',tipo:'obrigatorio'},
+      {id:'i2',nome:'Biometria facial confirmada',desc:'Validação pelo sistema',tipo:'obrigatorio'},
+      {id:'i3',nome:'CNH válida e categoria compatível',desc:'Verificar via SENATRAN/DETRAN',tipo:'obrigatorio'},
+      {id:'i4',nome:'CRLV de todos os veículos conferidos',desc:'Verificar autenticidade',tipo:'obrigatorio'},
+      {id:'i5',nome:'ANTT / RNTRC regular',desc:'Alerta se cadastro < 12 meses',tipo:'obrigatorio'},
+      {id:'i6',nome:'GR externa Opentech recebida do embarcador',desc:'Embarcador envia — verificar antes de liberar',tipo:'obrigatorio'},
+      {id:'i7',nome:'Vitimologia nacional realizada',desc:'Obrigatória no 1° embarque com a Transpanorama',tipo:'obrigatorio'},
+      {id:'i8',nome:'Referência comercial confirmada',desc:'Histórico ou referência ativa',tipo:'obrigatorio'},
+      {id:'i9',nome:'Rastreador ativo confirmado',desc:'Sinal verificado e espelhado',tipo:'obrigatorio'},
+      {id:'i10',nome:'Histórico ou RDO (carga > R$ 250k + terceiro)',desc:'Exigido para autônomo em cargas acima do limite',tipo:'condicional'},
+      {id:'i11',nome:'Contrato de arrendamento',desc:'Se proprietário tração ≠ reboque',tipo:'condicional'},
+    ]},
+    {id:'pgr-marfrig',nome:'Marfrig',grupo:'Clientes Especiais',obs:'Veículos: máx 15 anos de fabricação. Liberação válida para 1 embarque apenas.',itens:[
+      {id:'i1',nome:'Contato com motorista realizado',desc:'Ligar e confirmar dados',tipo:'obrigatorio'},
+      {id:'i2',nome:'Biometria facial confirmada',desc:'Validação pelo sistema',tipo:'obrigatorio'},
+      {id:'i3',nome:'CNH válida',desc:'Verificar via SENATRAN/DETRAN',tipo:'obrigatorio'},
+      {id:'i4',nome:'CRLV de todos os veículos conferidos',desc:'Verificar autenticidade',tipo:'obrigatorio'},
+      {id:'i5',nome:'ANTT / RNTRC regular',desc:'Alerta se cadastro < 12 meses',tipo:'obrigatorio'},
+      {id:'i6',nome:'GR externa Opentech recebida',desc:'Embarcador envia',tipo:'obrigatorio'},
+      {id:'i7',nome:'Vitimologia nacional (1° embarque)',desc:'Pesquisa nacional obrigatória',tipo:'obrigatorio'},
+      {id:'i8',nome:'Idade do veículo ≤ 15 anos',desc:'Verificar ano de fabricação do cavalo',tipo:'obrigatorio'},
+      {id:'i9',nome:'Liberação configurada para 1 embarque',desc:'Validade de liberação: 1 viagem',tipo:'obrigatorio'},
+      {id:'i10',nome:'Contrato de arrendamento',desc:'Se necessário',tipo:'condicional'},
+    ]},
+    {id:'pgr-algodao',nome:'Algodão / Pluma',grupo:'Mercadoria Específica',obs:'ATENÇÃO: Rastreamento satelital ou híbrido obrigatório. Vitimologia nacional + local MT e SP. Restrição de horário 18h–05h.',itens:[
+      {id:'i1',nome:'Contato com motorista realizado',desc:'Ligar e confirmar dados',tipo:'obrigatorio'},
+      {id:'i2',nome:'Biometria facial confirmada',desc:'Validação pelo sistema',tipo:'obrigatorio'},
+      {id:'i3',nome:'CNH válida e categoria compatível',desc:'Verificar via SENATRAN/DETRAN',tipo:'obrigatorio'},
+      {id:'i4',nome:'CRLV de todos os veículos conferidos',desc:'Todos da composição',tipo:'obrigatorio'},
+      {id:'i5',nome:'ANTT / RNTRC regular',desc:'Alerta se cadastro < 12 meses',tipo:'obrigatorio'},
+      {id:'i6',nome:'Referência comercial no segmento (algodão)',desc:'Experiência prévia no produto obrigatória',tipo:'obrigatorio'},
+      {id:'i7',nome:'Vitimologia nacional realizada',desc:'Pesquisa nacional obrigatória',tipo:'obrigatorio'},
+      {id:'i8',nome:'Vitimologia local — MT',desc:'Obrigatória para algodão',tipo:'obrigatorio'},
+      {id:'i9',nome:'Vitimologia local — SP',desc:'Obrigatória para algodão',tipo:'obrigatorio'},
+      {id:'i10',nome:'Rastreador satelital ou híbrido confirmado',desc:'Verificar tecnologia homologada',tipo:'obrigatorio'},
+      {id:'i11',nome:'Sinal espelhado para gerenciadora credenciada',desc:'Verificar acesso da gerenciadora',tipo:'obrigatorio'},
+      {id:'i12',nome:'Restrição de horário 18h–05h informada ao motorista',desc:'Proibição de trânsito no período',tipo:'obrigatorio'},
+      {id:'i13',nome:'Contrato de arrendamento',desc:'Se proprietário tração ≠ reboque',tipo:'condicional'},
+    ]},
+    {id:'pgr-comb',nome:'Combustíveis (álcool / etanol / diesel)',grupo:'Mercadoria Específica',obs:'ATENÇÃO: Documentação específica obrigatória. PF: ANTT deve constar transporte de produtos perigosos.',itens:[
+      {id:'i1',nome:'Contato com motorista realizado',desc:'Ligar e confirmar dados',tipo:'obrigatorio'},
+      {id:'i2',nome:'Biometria facial confirmada',desc:'Validação pelo sistema',tipo:'obrigatorio'},
+      {id:'i3',nome:'CNH válida — categoria E',desc:'Categoria E obrigatória',tipo:'obrigatorio'},
+      {id:'i4',nome:'CRLV de todos os veículos conferidos',desc:'Todos da composição',tipo:'obrigatorio'},
+      {id:'i5',nome:'ANTT / RNTRC — transporte produtos perigosos',desc:'Deve constar habilitação para produtos perigosos',tipo:'obrigatorio'},
+      {id:'i6',nome:'MOPP — Certificado com validade',desc:'Verificar validade e autenticidade',tipo:'obrigatorio'},
+      {id:'i7',nome:'Foto da placa de produtos perigosos',desc:'Identificação visual no veículo',tipo:'obrigatorio'},
+      {id:'i8',nome:'CIPP — Certificado de Inspeção',desc:'Obrigatório para combustíveis',tipo:'obrigatorio'},
+      {id:'i9',nome:'Certificado de Vistoria INMETRO do tanque',desc:'Verificar validade',tipo:'obrigatorio'},
+      {id:'i10',nome:'Autorização ANTT — produtos perigosos',desc:'Verificar habilitação específica',tipo:'obrigatorio'},
+      {id:'i11',nome:'CNPJ com atividade de produtos perigosos',desc:'Confirmar no CNPJ do proprietário',tipo:'obrigatorio'},
+      {id:'i12',nome:'Referência comercial no segmento',desc:'Experiência com combustíveis obrigatória',tipo:'obrigatorio'},
+      {id:'i13',nome:'Vitimologia nacional realizada',desc:'Pesquisa nacional',tipo:'obrigatorio'},
+      {id:'i14',nome:'Rastreador ativo confirmado',desc:'Sinal e espelhamento',tipo:'obrigatorio'},
+    ]},
+    {id:'pgr-brf',nome:'BRF — Óleo Vegetal / Commodities',grupo:'Clientes Especiais',obs:'Double check obrigatório: composição física, 1° embarque, ANTT < 12 meses ou CNPJ < 12 meses.',itens:[
+      {id:'i1',nome:'Contato com motorista realizado',desc:'Ligar e confirmar dados',tipo:'obrigatorio'},
+      {id:'i2',nome:'Biometria facial confirmada',desc:'Validação pelo sistema',tipo:'obrigatorio'},
+      {id:'i3',nome:'CNH válida e categoria compatível',desc:'Verificar via SENATRAN/DETRAN',tipo:'obrigatorio'},
+      {id:'i4',nome:'CRLV de todos os veículos conferidos',desc:'Verificar autenticidade',tipo:'obrigatorio'},
+      {id:'i5',nome:'ANTT / RNTRC regular',desc:'Alerta se cadastro < 12 meses',tipo:'obrigatorio'},
+      {id:'i6',nome:'Referência no segmento confirmada',desc:'Experiência em óleo/commodities',tipo:'obrigatorio'},
+      {id:'i7',nome:'Checklist PR GR antecipado + câmeras',desc:'Obrigatório para BRF',tipo:'obrigatorio'},
+      {id:'i8',nome:'ASO — Atestado de Saúde Ocupacional válido',desc:'Verificar validade e assinatura do médico',tipo:'obrigatorio'},
+      {id:'i9',nome:'Foto do rastreador — telemetria comprovada',desc:'Evidência do equipamento ativo',tipo:'obrigatorio'},
+      {id:'i10',nome:'Certificado de Treinamento UniG10',desc:'Obrigatório para BRF',tipo:'obrigatorio'},
+      {id:'i11',nome:'Regras de segurança + condições do veículo enviadas',desc:'Enviar documento ao motorista',tipo:'obrigatorio'},
+      {id:'i12',nome:'Contrato de arrendamento',desc:'Se proprietário tração ≠ reboque',tipo:'condicional'},
+    ]},
+    {id:'pgr-bebidas',nome:'Bebidas — Cerveja',grupo:'Mercadoria Específica',obs:'Veículos até 20 anos. Vitimologia: apenas pesquisa nacional. Destino RJ: ISCA RF obrigatória.',itens:[
+      {id:'i1',nome:'Contato com motorista realizado',desc:'Ligar e confirmar dados',tipo:'obrigatorio'},
+      {id:'i2',nome:'Biometria facial confirmada',desc:'Validação pelo sistema',tipo:'obrigatorio'},
+      {id:'i3',nome:'CNH válida',desc:'Verificar via SENATRAN/DETRAN',tipo:'obrigatorio'},
+      {id:'i4',nome:'CRLV de todos os veículos',desc:'Verificar autenticidade',tipo:'obrigatorio'},
+      {id:'i5',nome:'ANTT / RNTRC regular',desc:'Alerta se cadastro < 12 meses',tipo:'obrigatorio'},
+      {id:'i6',nome:'Referência comercial confirmada',desc:'Mínimo 2 empresas ativas',tipo:'obrigatorio'},
+      {id:'i7',nome:'Veículo ≤ 20 anos confirmado',desc:'PF ou PJ — verificar ano do cavalo',tipo:'obrigatorio'},
+      {id:'i8',nome:'Vitimologia nacional solicitada',desc:'Apenas pesquisa nacional — SP local só se houver apontamento',tipo:'obrigatorio'},
+      {id:'i9',nome:'Rastreador ativo confirmado',desc:'Sinal e espelhamento',tipo:'obrigatorio'},
+      {id:'i10',nome:'ISCA RF (destino RJ)',desc:'Obrigatória para bebidas com destino ao Rio de Janeiro',tipo:'condicional'},
+      {id:'i11',nome:'Contrato via GOV (arrendamento)',desc:'Aceito com assinatura GOV.br',tipo:'condicional'},
+    ]},
+  ];
+  for(const d of defaults){
+    await dbInsert(d);
+  }
+}
+
+// ═══════════ MODE ═══════════
+function setMode(m, btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+m).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('topbar-sub').textContent = m==='analista'?'Modo Analista':'Modo Admin — Paloma';
+  if(m==='admin') renderAdminSidebar();
+}
+
+// ═══════════ ANALISTA ═══════════
+function populateSelects(){
+  const grupos = [...new Set(DB.map(p=>p.grupo))].sort();
+  const selGrupo = document.getElementById('sel-grupo');
+  selGrupo.innerHTML = '<option value="">— Todos os grupos —</option>';
+  grupos.forEach(g=>selGrupo.innerHTML+=`<option value="${g}">${g}</option>`);
+  filtrarPGRs();
+}
+
+function filtrarPGRs(){
+  const grupo = document.getElementById('sel-grupo').value;
+  const lista = grupo ? DB.filter(p=>p.grupo===grupo) : DB;
+  const sel = document.getElementById('sel-pgr');
+  sel.innerHTML = '<option value="">— Selecione o checklist —</option>';
+  lista.forEach(p=>sel.innerHTML+=`<option value="${p.id}">${p.nome}</option>`);
+}
+
+function iniciarAnalise(){
+  const pgrId = document.getElementById('sel-pgr').value;
+  const motorista = document.getElementById('inp-motorista').value.trim();
+  const placa = document.getElementById('inp-placa').value.trim();
+  if(!pgrId){ toast('Selecione um checklist para continuar','ti-alert-circle'); return; }
+  const pgr = DB.find(p=>p.id===pgrId);
+  if(!pgr) return;
+  analiseAtiva = {
+    pgr: JSON.parse(JSON.stringify(pgr)),
+    motorista: motorista||'—',
+    placa: placa||'—',
+    checks:{}, obs:{},
+    inicio: new Date().toLocaleString('pt-BR')
+  };
+  renderChecklist();
+  document.getElementById('checklist-area').scrollIntoView({behavior:'smooth'});
+}
+
+function renderChecklist(){
+  const {pgr, motorista, placa} = analiseAtiva;
+  const total = pgr.itens.length;
+  const checked = Object.values(analiseAtiva.checks).filter(Boolean).length;
+  const pct = total?Math.round(checked/total*100):0;
+  const barColor = pct===100?'var(--green)':pct>=60?'var(--gold)':'var(--red)';
+
+  let html = `<div class="checklist-card">
+    <div class="cl-header">
+      <div class="cl-title">
+        <i class="ti ti-clipboard-check" style="color:var(--red)"></i>
+        ${pgr.nome}
+        <span class="cl-badge">${pgr.grupo}</span>
+      </div>
+      <div class="cl-meta">${motorista} · ${placa}</div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-bar-bg"><div class="prog-bar-fill" id="prog-fill" style="width:${pct}%;background:${barColor}"></div></div>
+      <span class="prog-text" id="prog-text">${checked}/${total}</span>
+    </div>`;
+
+  if(pgr.obs){
+    html+=`<div style="padding:10px 20px;background:var(--warn-light);border-bottom:1px solid var(--warn-border);font-size:12px;color:var(--warn);display:flex;gap:8px;align-items:flex-start">
+      <i class="ti ti-alert-triangle" style="flex-shrink:0;margin-top:1px"></i><span>${pgr.obs}</span></div>`;
+  }
+
+  html+=`<div class="cl-body">`;
+  pgr.itens.forEach(item=>{
+    const isChecked = !!analiseAtiva.checks[item.id];
+    const obsVal = analiseAtiva.obs[item.id]||'';
+    const tagClass = item.tipo==='obrigatorio'?'tag-obr':item.tipo==='condicional'?'tag-cond':'tag-isen';
+    const tagLabel = item.tipo==='obrigatorio'?'Obrigatório':item.tipo==='condicional'?'Condicional':'Isento';
+    html+=`
+    <div class="chk-item${isChecked?' checked':''}" id="chkrow-${item.id}" onclick="toggleCheck('${item.id}')">
+      <div class="chk-box"><i class="ti ti-check"></i></div>
+      <div class="chk-content">
+        <div class="chk-label">${item.nome}</div>
+        ${item.desc?`<div class="chk-desc">${item.desc}</div>`:''}
+        <div class="chk-tags"><span class="tag ${tagClass}">${tagLabel}</span></div>
+      </div>
+    </div>
+    <div class="obs-wrap" onclick="event.stopPropagation()">
+      <textarea class="obs-input" id="obs-${item.id}" placeholder="Observação / pendência deste item..." rows="2" oninput="salvarObs('${item.id}',this.value)">${obsVal}</textarea>
+    </div>`;
+  });
+
+  html+=`</div>
+    <div class="cl-footer">
+      <button class="gen-btn gen-btn-primary" onclick="gerarNota('completa')">
+        <i class="ti ti-file-text"></i> Gerar nota de análise
+      </button>
+      <button class="gen-btn gen-btn-secondary" onclick="gerarNota('pendencias')">
+        <i class="ti ti-alert-circle"></i> Somente pendências
+      </button>
+      <button class="gen-btn gen-btn-secondary" style="max-width:140px" onclick="resetAnalise()">
+        <i class="ti ti-refresh"></i> Limpar
+      </button>
+    </div>
+  </div>`;
+
+  document.getElementById('checklist-area').innerHTML = html;
+}
+
+function toggleCheck(id){
+  analiseAtiva.checks[id] = !analiseAtiva.checks[id];
+  const row = document.getElementById('chkrow-'+id);
+  if(analiseAtiva.checks[id]) row.classList.add('checked');
+  else row.classList.remove('checked');
+  updateProgress();
+}
+
+function salvarObs(id,val){ analiseAtiva.obs[id]=val; }
+
+function updateProgress(){
+  const {pgr} = analiseAtiva;
+  const total=pgr.itens.length;
+  const checked=Object.values(analiseAtiva.checks).filter(Boolean).length;
+  const pct=total?Math.round(checked/total*100):0;
+  const barColor=pct===100?'var(--green)':pct>=60?'var(--gold)':'var(--red)';
+  const bar=document.getElementById('prog-fill');
+  const txt=document.getElementById('prog-text');
+  if(bar){bar.style.width=pct+'%';bar.style.background=barColor;}
+  if(txt) txt.textContent=`${checked}/${total}`;
+}
+
+const SHORT_MAP={
+  'Contato com motorista realizado':'CONTATO: ok',
+  'Biometria facial confirmada':'BIOMETRIA: ok',
+  'CNH válida e categoria compatível':'CNH: ok',
+  'CNH válida':'CNH: ok',
+  'CRLV de todos os veículos conferidos':'CRLV: ok',
+  'CRLV de todos os veículos':'CRLV: ok',
+  'ANTT / RNTRC regular':'ANTT: ok',
+  'ANTT / RNTRC — transporte produtos perigosos':'ANTT PROD PER: ok',
+  'Referência comercial confirmada':'REF: ok',
+  'Referência no segmento confirmada':'REF: ok',
+  'Referência comercial no segmento':'REF: ok',
+  'Consulta de histórico criminal realizada':'CRIMINAL: ok',
+  'Consulta criminal realizada':'CRIMINAL: ok',
+  'Sem bloqueio no Klios / Eagle / Blacklist':'SEM BLOQ: ok',
+  'Sem bloqueio Klios / Eagle / Blacklist':'SEM BLOQ: ok',
+  'Rastreador ativo confirmado':'RAST: ok',
+  'Rastreador satelital ou híbrido confirmado':'RAST SAT/HÍB: ok',
+  'Sinal espelhado para gerenciadora credenciada':'ESPELHAMENTO: ok',
+  'GR externa solicitada (GUEP ou Certify)':'GR EXT: ok',
+  'GR externa Opentech recebida do embarcador':'GR OPENTECH: ok',
+  'GR externa Opentech recebida':'GR OPENTECH: ok',
+  'Vitimologia nacional realizada':'VITIM NAC: ok',
+  'Vitimologia nacional (1° embarque)':'VITIM NAC: ok',
+  'Vitimologia nacional solicitada':'VITIM NAC: ok',
+  'Vitimologia local — MT':'VITIM MT: ok',
+  'Vitimologia local — SP':'VITIM SP: ok',
+  'MOPP — Certificado com validade':'MOPP: ok',
+  'ASO — Atestado de Saúde Ocupacional válido':'ASO: ok',
+  'Certificado de Treinamento UniG10':'UNIG10: ok',
+  'Foto do rastreador — telemetria comprovada':'FOTO RAST: ok',
+  'Checklist PR GR antecipado + câmeras':'CHECKLIST PR: ok',
+  'Regras de segurança + condições do veículo enviadas':'REGRAS SEG: ok',
+  'Veículo ≤ 20 anos confirmado':'IDADE VEIC: ok',
+  'Idade do veículo ≤ 15 anos':'IDADE VEIC: ok',
+  'Liberação configurada para 1 embarque':'LIB 1 EMBARQUE: ok',
+  'Foto da placa de produtos perigosos':'PLACA PROD PER: ok',
+  'CIPP — Certificado de Inspeção':'CIPP: ok',
+  'Certificado de Vistoria INMETRO do tanque':'INMETRO: ok',
+  'Autorização ANTT — produtos perigosos':'AUT ANTT: ok',
+  'CNPJ com atividade de produtos perigosos':'CNPJ PROD PER: ok',
+};
+
+function gerarNota(tipo){
+  const {pgr,motorista,placa} = analiseAtiva;
+  const now = new Date().toLocaleString('pt-BR');
+  const pendentes = pgr.itens.filter(it=>!analiseAtiva.checks[it.id]);
+  const concluidos = pgr.itens.filter(it=>!!analiseAtiva.checks[it.id]);
+
+  let nota='';
+
+  if(tipo==='pendencias' && pendentes.length===0){
+    nota=`✅ ANÁLISE CONCLUÍDA — ${pgr.nome.toUpperCase()}\n`;
+    nota+=`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    nota+=`Motorista: ${motorista}  |  Composição: ${placa}\n`;
+    nota+=`Data/Hora: ${now}\n\n`;
+    nota+=formatConcluidos(concluidos)+'\n';
+    nota+=`✅ Perfil ADEQUADO AO RISCO — liberação recomendada.`;
+  } else if(tipo==='pendencias'){
+    nota=`⚠️ ANÁLISE COM PENDÊNCIAS — ${pgr.nome.toUpperCase()}\n`;
+    nota+=`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    nota+=`Motorista: ${motorista}  |  Composição: ${placa}\n`;
+    nota+=`Data/Hora: ${now}\n\n`;
+    if(concluidos.length){ nota+=`DOC: ${formatConcluidos(concluidos)}\n`; }
+    nota+=`\nPENDÊNCIAS:\n`;
+    pendentes.forEach(it=>{
+      const o=analiseAtiva.obs[it.id];
+      nota+=`- ${it.nome}`;
+      if(o) nota+=`\n  → ${o}`;
+      nota+='\n';
+    });
+    const temObr=pendentes.some(it=>it.tipo==='obrigatorio');
+    nota+=`\n${temObr?'❌ NÃO APTO — pendências em itens obrigatórios. Dúvidas consultar o gestor.':'⚠️ AGUARDANDO — pendências em itens condicionais. Verificar com gestor.'}`;
+  } else {
+    nota=`📋 NOTA DE ANÁLISE — ${pgr.nome.toUpperCase()}\n`;
+    nota+=`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    nota+=`Motorista: ${motorista}  |  Composição: ${placa}\n`;
+    nota+=`Data/Hora: ${now}\n\n`;
+    if(concluidos.length){ nota+=`DOC: ${formatConcluidos(concluidos)}\n`; }
+    if(pendentes.length){
+      nota+=`\nPENDÊNCIAS:\n`;
+      pendentes.forEach(it=>{
+        const o=analiseAtiva.obs[it.id];
+        nota+=`- ${it.nome}`;
+        if(o) nota+=`\n  → ${o}`;
+        nota+='\n';
+      });
+    }
+    nota+='\n';
+    if(pendentes.length===0){
+      nota+=`✅ Perfil ADEQUADO AO RISCO — liberação recomendada.`;
+    } else {
+      const temObr=pendentes.some(it=>it.tipo==='obrigatorio');
+      nota+=temObr?`❌ NÃO APTO — pendências em itens obrigatórios. Dúvidas consultar o gestor.`:`⚠️ AGUARDANDO — pendências em itens condicionais. Verificar com gestor.`;
+    }
+  }
+  mostrarNota(nota);
+}
+
+function formatConcluidos(items){
+  const parts=items.map(it=>{
+    const o=analiseAtiva.obs[it.id];
+    const label=SHORT_MAP[it.nome]||it.nome.substring(0,25).toUpperCase()+': ok';
+    return o?`${label} (${o})`:label;
+  });
+  return parts.join(' | ');
+}
+
+function mostrarNota(texto){
+  const area=document.getElementById('checklist-area');
+  document.getElementById('nota-gerada')?.remove();
+  const div=document.createElement('div');
+  div.className='nota-box';div.id='nota-gerada';
+  div.innerHTML=`
+    <div class="nota-header">
+      <span><i class="ti ti-file-text"></i> Nota gerada automaticamente</span>
+      <span style="font-size:11px;opacity:.6">${new Date().toLocaleString('pt-BR')}</span>
+    </div>
+    <div class="nota-body"><pre class="nota-text" id="nota-texto">${texto}</pre></div>
+    <div style="padding:8px 20px;background:var(--surface2);border-top:1px solid var(--border)">
+      <textarea class="obs-input" id="obs-geral" placeholder="Adicionar observação final..." rows="2"></textarea>
+    </div>
+    <div class="nota-actions">
+      <button class="copy-btn" onclick="copiarNota()"><i class="ti ti-copy"></i> Copiar nota</button>
+      <button class="reset-btn" onclick="fecharNota()">Fechar</button>
+    </div>`;
+  area.appendChild(div);
+  div.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function copiarNota(){
+  const txt=document.getElementById('nota-texto')?.textContent||'';
+  const obs=document.getElementById('obs-geral')?.value;
+  const final=obs?txt+'\n\nOBS: '+obs:txt;
+  navigator.clipboard.writeText(final).then(()=>toast('Nota copiada!'));
+}
+function fecharNota(){ document.getElementById('nota-gerada')?.remove(); }
+function resetAnalise(){
+  analiseAtiva=null;
+  document.getElementById('checklist-area').innerHTML='';
+  document.getElementById('sel-pgr').value='';
+  document.getElementById('inp-motorista').value='';
+  document.getElementById('inp-placa').value='';
+}
+
+// ═══════════ ADMIN ═══════════
+function renderAdminSidebar(){
+  const grupos=[...new Set(DB.map(p=>p.grupo))].sort();
+  let html='';
+  grupos.forEach(g=>{
+    html+=`<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);padding:10px 0 4px 4px">${g}</div>`;
+    DB.filter(p=>p.grupo===g).forEach(p=>{
+      html+=`<div class="pgr-item${currentPGRId===p.id?' active':''}" onclick="selectPGR('${p.id}')">
+        <span class="pgr-item-name">${p.nome}</span>
+        <span class="pgr-count">${p.itens.length}</span>
+      </div>`;
+    });
+  });
+  document.getElementById('pgr-list-sidebar').innerHTML=html;
+}
+
+function selectPGR(id){
+  currentPGRId=id;
+  renderAdminSidebar();
+  renderEditor();
+}
+
+function renderEditor(){
+  const pgr=DB.find(p=>p.id===currentPGRId);
+  if(!pgr){document.getElementById('editor-area').innerHTML='<div class="editor-empty"><i class="ti ti-clipboard-list"></i><p>Selecione um checklist para editar.</p></div>';return;}
+  const grupos=[...new Set(DB.map(p=>p.grupo))];
+  const grupoOpts=grupos.map(g=>`<option${g===pgr.grupo?' selected':''}>${g}</option>`).join('');
+  let html=`<div class="editor-card">
+    <div class="editor-head">
+      <input class="editor-title-input" id="edit-nome" value="${pgr.nome}" placeholder="Nome do checklist">
+      <select class="editor-group-sel" id="edit-grupo">${grupoOpts}<option value="__novo__">+ Novo grupo...</option></select>
+      <button class="save-pgr-btn" id="save-btn" onclick="salvarPGR()"><i class="ti ti-cloud-upload"></i> Salvar</button>
+      <button class="delete-pgr-btn" onclick="deletarPGR()"><i class="ti ti-trash"></i></button>
+    </div>
+    <div style="padding:10px 20px;border-bottom:1px solid var(--border)">
+      <input type="text" class="txt-input" id="edit-obs" value="${pgr.obs||''}" placeholder="Observação / alerta para analistas (aparece em destaque)">
+    </div>
+    <div id="itens-editor">`;
+  pgr.itens.forEach((item,idx)=>{ html+=renderItemEditor(item,idx); });
+  html+=`</div>
+    <button class="add-item-btn" onclick="adicionarItem()"><i class="ti ti-plus"></i> Adicionar item ao checklist</button>
+  </div>`;
+  document.getElementById('editor-area').innerHTML=html;
+}
+
+function renderItemEditor(item){
+  return`<div class="item-editor" id="item-editor-${item.id}">
+    <i class="ti ti-grip-vertical drag-handle"></i>
+    <div class="item-fields">
+      <div class="item-row">
+        <input class="item-name-input" value="${item.nome}" placeholder="Nome do item de verificação" id="iname-${item.id}" oninput="updateItemField('${item.id}','nome',this.value)">
+        <select class="item-type-sel" id="itype-${item.id}" onchange="updateItemField('${item.id}','tipo',this.value)">
+          <option value="obrigatorio"${item.tipo==='obrigatorio'?' selected':''}>Obrigatório</option>
+          <option value="condicional"${item.tipo==='condicional'?' selected':''}>Condicional</option>
+          <option value="isento"${item.tipo==='isento'?' selected':''}>Isento</option>
+        </select>
+        <button class="del-item-btn" onclick="deletarItem('${item.id}')"><i class="ti ti-x"></i></button>
+      </div>
+      <input class="item-desc-input" value="${item.desc||''}" placeholder="Orientação para o analista (ex: Verificar via SENATRAN/DETRAN)" id="idesc-${item.id}" oninput="updateItemField('${item.id}','desc',this.value)">
+    </div>
+  </div>`;
+}
+
+function updateItemField(id,campo,valor){
+  const pgr=DB.find(p=>p.id===currentPGRId);
+  if(!pgr)return;
+  const item=pgr.itens.find(i=>i.id===id);
+  if(item) item[campo]=valor;
+}
+
+async function salvarPGR(){
+  const pgr=DB.find(p=>p.id===currentPGRId);
+  if(!pgr)return;
+  const btn=document.getElementById('save-btn');
+  btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2"></i> Salvando...';
+  pgr.nome=document.getElementById('edit-nome').value;
+  pgr.obs=document.getElementById('edit-obs').value;
+  const grupoSel=document.getElementById('edit-grupo').value;
+  if(grupoSel==='__novo__'){
+    const ng=prompt('Nome do novo grupo:');
+    if(ng) pgr.grupo=ng;
+  } else { pgr.grupo=grupoSel; }
+  try{
+    await dbUpdate(pgr.id,{nome:pgr.nome,grupo:pgr.grupo,obs:pgr.obs,itens:pgr.itens,atualizado_em:new Date().toISOString()});
+    DB=await dbGet();
+    setSyncBar('ok',`✓ Salvo — ${new Date().toLocaleTimeString('pt-BR')}`);
+    toast('Checklist salvo e sincronizado!');
+    renderAdminSidebar();
+    populateSelects();
+  } catch(e){
+    toast('Erro ao salvar — verifique a conexão','ti-alert-circle');
+    setSyncBar('error','⚠ Erro ao salvar');
+  }
+  btn.disabled=false;btn.innerHTML='<i class="ti ti-cloud-upload"></i> Salvar';
+}
+
+async function deletarPGR(){
+  const pgr=DB.find(p=>p.id===currentPGRId);
+  if(!pgr||!confirm(`Excluir "${pgr.nome}"? Esta ação não pode ser desfeita.`))return;
+  try{
+    await dbDelete(pgr.id);
+    DB=DB.filter(p=>p.id!==currentPGRId);
+    currentPGRId=null;
+    renderAdminSidebar();
+    populateSelects();
+    document.getElementById('editor-area').innerHTML='<div class="editor-empty"><i class="ti ti-clipboard-list"></i><p>Checklist excluído com sucesso.</p></div>';
+    toast('Checklist excluído.');
+    setSyncBar('ok',`✓ Sincronizado — ${DB.length} checklist(s)`);
+  } catch(e){ toast('Erro ao excluir','ti-alert-circle'); }
+}
+
+function adicionarItem(){
+  const pgr=DB.find(p=>p.id===currentPGRId);
+  if(!pgr)return;
+  const novoItem={id:iuid(),nome:'',desc:'',tipo:'obrigatorio'};
+  pgr.itens.push(novoItem);
+  const container=document.getElementById('itens-editor');
+  const div=document.createElement('div');
+  div.innerHTML=renderItemEditor(novoItem);
+  container.appendChild(div.firstElementChild);
+  document.getElementById('iname-'+novoItem.id)?.focus();
+}
+
+function deletarItem(id){
+  const pgr=DB.find(p=>p.id===currentPGRId);
+  if(!pgr)return;
+  pgr.itens=pgr.itens.filter(i=>i.id!==id);
+  document.getElementById('item-editor-'+id)?.remove();
+}
+
+// ═══════════ MODAL ═══════════
+function abrirModalNovaPGR(){ document.getElementById('modal-nova').classList.add('open'); document.getElementById('modal-nome').focus(); }
+function fecharModal(){ document.getElementById('modal-nova').classList.remove('open'); }
+
+async function criarPGR(){
+  const nome=document.getElementById('modal-nome').value.trim();
+  const grupo=document.getElementById('modal-grupo').value.trim();
+  const obs=document.getElementById('modal-obs').value.trim();
+  if(!nome||!grupo){ toast('Preencha o nome e o grupo','ti-alert-circle'); return; }
+  const nova={id:'pgr-'+iuid(),nome,grupo,obs,itens:[]};
+  try{
+    await dbInsert(nova);
+    DB=await dbGet();
+    currentPGRId=nova.id;
+    fecharModal();
+    renderAdminSidebar();
+    renderEditor();
+    populateSelects();
+    toast('Checklist criado e sincronizado!');
+    setSyncBar('ok',`✓ Sincronizado — ${DB.length} checklist(s)`);
+    document.getElementById('modal-nome').value='';
+    document.getElementById('modal-grupo').value='';
+    document.getElementById('modal-obs').value='';
+  } catch(e){ toast('Erro ao criar checklist','ti-alert-circle'); }
+}
+
+document.getElementById('modal-nova').addEventListener('click',function(e){ if(e.target===this)fecharModal(); });
+
+// INIT
+init();
+</script>
+</body>
+</html>
